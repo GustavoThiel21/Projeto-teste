@@ -43,11 +43,9 @@ object DMAplicacao: TDMAplicacao
   end
   object FDConexao: TFDConnection
     Params.Strings = (
-      'Database=C:\Projeto Dass\Banco\DBTESTE.FDB'
-      'User_Name=SYSDBA'
-      'Password=masterkey'
       'DriverID=FB'
-      'Server=localhost')
+      'User_Name=sysdba'
+      'Password=masterkey')
     Left = 72
     Top = 32
   end

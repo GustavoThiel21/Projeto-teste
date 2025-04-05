@@ -25,6 +25,9 @@
       object MiAtribuirBanco: TMenuItem
         Action = ActAtribuirBanco
       end
+      object MiCriarBanco: TMenuItem
+        Action = ActCriarBanco
+      end
     end
   end
   object Acoes: TActionList
@@ -40,6 +43,10 @@
     object ActAtribuirBanco: TAction
       Caption = 'Atribuir banco'
       OnExecute = ActAtribuirBancoExecute
+    end
+    object ActCriarBanco: TAction
+      Caption = 'Criar banco'
+      OnExecute = ActCriarBancoExecute
     end
   end
   object ODCaminhoBD: TOpenDialog

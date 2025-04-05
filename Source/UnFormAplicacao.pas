@@ -21,9 +21,12 @@ type
     Conexao: TMenuItem;
     MiAtribuirBanco: TMenuItem;
     ODCaminhoBD: TOpenDialog;
+    ActCriarBanco: TAction;
+    MiCriarBanco: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure ActCadastrarExecute(Sender: TObject);
     procedure ActAtribuirBancoExecute(Sender: TObject);
+    procedure ActCriarBancoExecute(Sender: TObject);
   private
     FFormCadastroFuncionarios: TFormCadastroFuncionarios;
     function GetFormCadastroFuncionarios: TFormCadastroFuncionarios;
@@ -52,6 +55,11 @@ end;
 procedure TFormAplicação.ActCadastrarExecute(Sender: TObject);
 begin
   FormCadastroFuncionarios.Show;
+end;
+
+procedure TFormAplicação.ActCriarBancoExecute(Sender: TObject);
+begin
+  DMAplicacao.CriarBD;
 end;
 
 procedure TFormAplicação.FormDestroy(Sender: TObject);

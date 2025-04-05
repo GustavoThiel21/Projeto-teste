@@ -30,7 +30,10 @@ Type
     Function BuscarProximoIDFuncionario: Int64;
   Public
     { Public declarations }
+    Function ExisteTabela: Boolean;
     Procedure ConectarBD;
+    Procedure CriarBD;
+    Procedure CriarEstruturaBD;
     Procedure AlterarCaminhoBD(ACaminho: String = '');
     Procedure BuscarDadosFuncionarios(ACondicao: String = '');
   end;
@@ -54,6 +57,7 @@ begin
     LIni.WriteString('DadosBD', 'CaminhoBD', ACaminho);
   finally
     LIni.Free;
+    ConectarBD;
   end;
 end;
 
@@ -97,6 +101,7 @@ begin
     with LQueryBusca do
     begin
       Connection := FDConexao;
+      sql.Clear;
       sql.Add('SELECT GEN_ID(GN_FUNCIONARIOS,1) AS ID FROM RDB$RELATIONS');
       open;
       Result := FieldByName('ID').AsLargeInt;
@@ -119,6 +124,63 @@ begin
       Add('Password=masterkey');
     end;
   end;
+
+  FDQFuncionarios.Connection := FDConexao;
+end;
+
+procedure TDMAplicacao.CriarBD;
+Var
+  LDiretorio: String;
+begin
+  LDiretorio := ExtractFileDir(Application.ExeName) + '\DBTESTE.FDB';;
+
+  try
+    FDConexao.Params.Values['CreateDatabase'] := BoolToStr(not FileExists(Trim(LDiretorio)), True);
+    FDConexao.Params.Values['Database'] := Trim(LDiretorio);
+    FDConexao.Params.Values['DriverID'] := 'FB';
+    FDConexao.Params.Values['User_Name'] := 'SYSDBA';
+    FDConexao.Params.Values['Password'] := 'masterkey';
+    FDConexao.Params.Values['CharacterSet'] := 'WIN1252';
+    FDConexao.Params.Values['Dialect'] := '3';
+    FDConexao.Commit;
+
+    AlterarCaminhoBD(LDiretorio);
+
+    if not ExisteTabela then
+    begin
+      CriarEstruturaBD;
+      ShowMessage('Banco de dados criado com sucesso.')
+    end;
+  Except
+    ShowMessage('Erro ao criar o banco de dados.')
+  end;
+end;
+
+procedure TDMAplicacao.CriarEstruturaBD;
+Const
+  CTabela = 'CREATE TABLE FUNCIONARIOS ( ' + sLineBreak + '    IDFUNCIONARIO  NUMERIC(18,0) NOT NULL,' + sLineBreak +
+    '    CPF            VARCHAR(11) NOT NULL,' + sLineBreak + '    NOME           VARCHAR(200),' + sLineBreak +
+    '    EMAIL          VARCHAR(100),' + sLineBreak + '    TAMCAMISA      VARCHAR(10) NOT NULL,' + sLineBreak +
+    '    TAMCALCADO     NUMERIC(2,0) NOT NULL,' + sLineBreak + '    OBSERVACAO     VARCHAR(300));' + sLineBreak;
+
+  CTabelaPK = ' ALTER TABLE FUNCIONARIOS ADD PRIMARY KEY (IDFUNCIONARIO);';
+
+  CGenerator = ' CREATE SEQUENCE GN_FUNCIONARIOS;';
+begin
+
+  with FDQFuncionarios do
+  begin
+    close;
+    sql.Clear;
+    sql.Add(CTabela);
+    ExecSQL;
+    sql.Clear;
+    sql.Add(CGenerator);
+    ExecSQL;
+    sql.Clear;
+    sql.Add(CTabelaPK);
+    ExecSQL;
+  end;
 end;
 
 procedure TDMAplicacao.DataModuleCreate(Sender: TObject);
@@ -135,6 +197,25 @@ begin
   FreeAndNil(FDQFuncionarios);
   FDConexao.close;
   FreeAndNil(FDConexao);
+end;
+
+function TDMAplicacao.ExisteTabela: Boolean;
+Var
+  LQueryBusca: TFDQuery;
+begin
+  try
+    LQueryBusca := TFDQuery.Create(nil);
+    with LQueryBusca do
+    begin
+      Connection := FDConexao;
+      sql.Clear;
+      sql.Add('SELECT 1 FROM RDB$RELATIONS WHERE RDB$RELATION_NAME = ''FUNCIONARIOS''');
+      open;
+      Result := RecordCount > 0;
+    end;
+  finally
+    FreeAndNil(LQueryBusca);
+  end;
 end;
 
 procedure TDMAplicacao.FDQFuncionariosCPFGetText(Sender: TField; var Text: string; DisplayText: Boolean);
