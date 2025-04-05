@@ -140,10 +140,7 @@
             <Form>FormCadastroFuncionarios</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\Source\UnFormConsultarUsuarios.pas">
-            <Form>FormConsultarFuncionarios</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
+        <DCCReference Include="..\Source\UnAplicacaoFuncoes.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

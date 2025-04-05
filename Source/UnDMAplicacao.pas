@@ -32,7 +32,7 @@ Type
     { Public declarations }
     Procedure ConectarBD;
     Procedure AlterarCaminhoBD(ACaminho: String = '');
-    Procedure BuscarDadosFuncionarios;
+    Procedure BuscarDadosFuncionarios(ACondicao: String = '');
   end;
 
 var
@@ -70,13 +70,20 @@ begin
   end;
 end;
 
-procedure TDMAplicacao.BuscarDadosFuncionarios;
+procedure TDMAplicacao.BuscarDadosFuncionarios(ACondicao: string);
+Var
+  LSql: String;
 begin
+  LSql := 'SELECT * FROM FUNCIONARIOS ';
+
+  if ACondicao <> Emptystr then
+    LSql := LSql + 'WHERE ' + ACondicao;
+
   with FDQFuncionarios do
   begin
     close;
     sql.Clear;
-    sql.Add('SELECT * FROM FUNCIONARIOS');
+    sql.Add(LSql);
     open;
   end;
 end;
@@ -149,6 +156,7 @@ end;
 procedure TDMAplicacao.FDQFuncionariosNewRecord(DataSet: TDataSet);
 begin
   DataSet.FieldByName('IDFUNCIONARIO').AsLargeInt := BuscarProximoIDFuncionario;
+  DataSet.FieldByName('TAMCAMISA').AsString := 'M';
 end;
 
 end.

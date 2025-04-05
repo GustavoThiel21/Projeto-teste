@@ -8,14 +8,12 @@ uses
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.FB,
   FireDAC.Phys.FBDef, FireDAC.VCLUI.Wait, Data.DB, FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS,
   FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet, Vcl.StdCtrls, Vcl.ExtCtrls, UnFormCadastroUsuarios,
-  UnDMAplicacao, UnFormConsultarUsuarios, Vcl.Menus, System.Actions, Vcl.ActnList;
+  UnDMAplicacao, Vcl.Menus, System.Actions, Vcl.ActnList;
 
 type
   TFormAplicação = class(TForm)
     MMGeral: TMainMenu;
     Cadastrofuncionrio1: TMenuItem;
-    MiCadastrar: TMenuItem;
-    MiConsultar: TMenuItem;
     Acoes: TActionList;
     ActCadastrar: TAction;
     ActConsultar: TAction;
@@ -25,20 +23,14 @@ type
     ODCaminhoBD: TOpenDialog;
     procedure FormDestroy(Sender: TObject);
     procedure ActCadastrarExecute(Sender: TObject);
-    procedure ActConsultarExecute(Sender: TObject);
     procedure ActAtribuirBancoExecute(Sender: TObject);
   private
     FFormCadastroFuncionarios: TFormCadastroFuncionarios;
-    FFormConsultarFuncionarios: TFormConsultarFuncionarios;
     function GetFormCadastroFuncionarios: TFormCadastroFuncionarios;
     procedure SetFormCadastroFuncionarios(const Value: TFormCadastroFuncionarios);
-    function GetFormConsultarFuncionarios: TFormConsultarFuncionarios;
-    procedure SetFormConsultarFuncionarios(const Value: TFormConsultarFuncionarios);
     { Private declarations }
     property FormCadastroFuncionarios: TFormCadastroFuncionarios read GetFormCadastroFuncionarios
       write SetFormCadastroFuncionarios;
-    property FormConsultarFuncionarios: TFormConsultarFuncionarios read GetFormConsultarFuncionarios
-      write SetFormConsultarFuncionarios;
   public
     { Public declarations }
   end;
@@ -62,11 +54,6 @@ begin
   FormCadastroFuncionarios.Show;
 end;
 
-procedure TFormAplicação.ActConsultarExecute(Sender: TObject);
-begin
-  FormConsultarFuncionarios.Show;
-end;
-
 procedure TFormAplicação.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FormCadastroFuncionarios);
@@ -81,22 +68,9 @@ begin
     Result := FFormCadastroFuncionarios;
 end;
 
-function TFormAplicação.GetFormConsultarFuncionarios: TFormConsultarFuncionarios;
-begin
-  if not Assigned(FFormConsultarFuncionarios) then
-    Result := TFormConsultarFuncionarios.Create(nil)
-  else
-    Result := FFormConsultarFuncionarios;
-end;
-
 procedure TFormAplicação.SetFormCadastroFuncionarios(const Value: TFormCadastroFuncionarios);
 begin
   FormCadastroFuncionarios := FFormCadastroFuncionarios;
-end;
-
-procedure TFormAplicação.SetFormConsultarFuncionarios(const Value: TFormConsultarFuncionarios);
-begin
-  FormConsultarFuncionarios := FFormConsultarFuncionarios;
 end;
 
 end.

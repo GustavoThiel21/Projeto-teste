@@ -5,38 +5,61 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls, Vcl.ActnMenus, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Buttons, System.Actions, Vcl.ActnList, Vcl.Mask, Vcl.DBCtrls, Data.DB;
+  Vcl.ExtCtrls, Vcl.Buttons, System.Actions, Vcl.ActnList, Vcl.Mask, Vcl.DBCtrls, Data.DB, UnAplicacaoFuncoes,
+  Vcl.ComCtrls, Vcl.Grids, Vcl.DBGrids, System.ImageList, Vcl.ImgList;
 
 type
   THackWinControl = class(TWinControl);
 
 type
   TFormCadastroFuncionarios = class(TForm)
-    Panel1: TPanel;
-    Panel2: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
     Acoes: TActionList;
     ActNovo: TAction;
     ActSalvar: TAction;
     ActCancelar: TAction;
     ActExcluir: TAction;
-    EdtCPF: TDBEdit;
+    DSFuncionarios: TDataSource;
+    PGGeral: TPageControl;
+    TsListagem: TTabSheet;
+    TSCadastro: TTabSheet;
+    PnlCadastro: TPanel;
     LblCPF: TLabel;
-    EdtNome: TDBEdit;
     LblNome: TLabel;
-    EdtEmail: TDBEdit;
     LblEmail: TLabel;
-    EdtTamCalcado: TDBEdit;
     LblTamCalcado: TLabel;
-    CbTamCamiseta: TDBComboBox;
     LblTamCamiseta: TLabel;
-    EdtObservacao: TDBEdit;
     LblObservacao: TLabel;
     LblStatus: TLabel;
-    DSFuncionarios: TDataSource;
+    EdtCPF: TDBEdit;
+    EdtNome: TDBEdit;
+    EdtEmail: TDBEdit;
+    EdtTamCalcado: TDBEdit;
+    CbTamCamiseta: TDBComboBox;
+    EdtObservacao: TDBEdit;
+    Panel2: TPanel;
+    BtnNovo: TSpeedButton;
+    BtnSalvar: TSpeedButton;
+    BtnCancelar: TSpeedButton;
+    BtnExcluir: TSpeedButton;
+    DBGFuncionarios: TDBGrid;
+    PnlNavegacao: TPanel;
+    BtnPrimeiro: TSpeedButton;
+    BtnAnterior: TSpeedButton;
+    BtnProximo: TSpeedButton;
+    BtnUltimo: TSpeedButton;
+    ChkInsercaoSequencial: TCheckBox;
+    ActPrimeiro: TAction;
+    ActAnterior: TAction;
+    ActProximo: TAction;
+    ActUltimo: TAction;
+    ILImagensBotoes: TImageList;
+    GBFiltros: TGroupBox;
+    CBFiltros: TComboBox;
+    Label1: TLabel;
+    EdtInformacao: TEdit;
+    BtnPesquisar: TButton;
+    Label2: TLabel;
+    ActPesquisar: TAction;
     procedure ActNovoExecute(Sender: TObject);
     procedure ActSalvarExecute(Sender: TObject);
     procedure ActCancelarExecute(Sender: TObject);
@@ -47,13 +70,23 @@ type
     procedure EdtCPFKeyPress(Sender: TObject; var Key: Char);
     procedure EdtNomeKeyPress(Sender: TObject; var Key: Char);
     procedure EdtEmailKeyPress(Sender: TObject; var Key: Char);
-    procedure CbTamCamisetaKeyPress(Sender: TObject; var Key: Char);
     procedure EdtTamCalcadoKeyPress(Sender: TObject; var Key: Char);
+    procedure FormDestroy(Sender: TObject);
+    procedure ActUltimoExecute(Sender: TObject);
+    procedure ActProximoExecute(Sender: TObject);
+    procedure ActAnteriorExecute(Sender: TObject);
+    procedure ActPrimeiroExecute(Sender: TObject);
+    procedure ActPesquisarExecute(Sender: TObject);
+    procedure EdtInformacaoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure CBFiltrosKeyPress(Sender: TObject; var Key: Char);
+    procedure CbTamCamisetaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
+    FFuncoes: TFuncoes;
     { Private declarations }
-    Function ValidouCPF: Boolean;
     Procedure AlterarStatusVisual;
+    Procedure HabilitarBotoes;
     Procedure ValidarCampos;
+    Procedure VerificarInsercaoSequencial;
   public
     { Public declarations }
   end;
@@ -83,11 +116,37 @@ procedure TFormCadastroFuncionarios.ActNovoExecute(Sender: TObject);
 begin
   if DSFuncionarios.DataSet.State = dsBrowse then
   begin
+    if PGGeral.ActivePage = TsListagem then
+      PGGeral.ActivePage := TSCadastro;
+
     DSFuncionarios.DataSet.Insert;
     EdtCPF.SetFocus;
-    // Atribuir default o tamanho M por ser o mais comum
-    CbTamCamiseta.ItemIndex := 2;
   end;
+end;
+
+procedure TFormCadastroFuncionarios.ActPesquisarExecute(Sender: TObject);
+begin
+  DMAplicacao.BuscarDadosFuncionarios(FFuncoes.MontarCondicaoFiltro(CBFiltros.Text, Trim(EdtInformacao.Text)));
+end;
+
+procedure TFormCadastroFuncionarios.ActPrimeiroExecute(Sender: TObject);
+begin
+  DSFuncionarios.DataSet.First;
+end;
+
+procedure TFormCadastroFuncionarios.ActAnteriorExecute(Sender: TObject);
+begin
+  DSFuncionarios.DataSet.Prior;
+end;
+
+procedure TFormCadastroFuncionarios.ActProximoExecute(Sender: TObject);
+begin
+  DSFuncionarios.DataSet.Next;
+end;
+
+procedure TFormCadastroFuncionarios.ActUltimoExecute(Sender: TObject);
+begin
+  DSFuncionarios.DataSet.Last;
 end;
 
 procedure TFormCadastroFuncionarios.ActSalvarExecute(Sender: TObject);
@@ -96,7 +155,10 @@ begin
   begin
     ValidarCampos;
     DSFuncionarios.DataSet.Post;
-    ShowMessage('Dados salvos com sucesso.')
+
+    VerificarInsercaoSequencial;
+    if (not ChkInsercaoSequencial.Checked) and (DSFuncionarios.DataSet.State = dsinsert) then
+      ShowMessage('Funcionário inserido com sucesso.')
   end;
 end;
 
@@ -110,15 +172,22 @@ begin
     LblStatus.Caption := 'Status: Navegando';
 end;
 
-procedure TFormCadastroFuncionarios.CbTamCamisetaKeyPress(Sender: TObject; var Key: Char);
+procedure TFormCadastroFuncionarios.CBFiltrosKeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = #13 then
+    Perform(CM_Dialogkey, VK_TAB, 0);
+end;
+
+procedure TFormCadastroFuncionarios.CbTamCamisetaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = vk_return then
     Perform(CM_Dialogkey, VK_TAB, 0)
 end;
 
 procedure TFormCadastroFuncionarios.DSFuncionariosStateChange(Sender: TObject);
 begin
   AlterarStatusVisual;
+  HabilitarBotoes;
 end;
 
 procedure TFormCadastroFuncionarios.EdtCPFKeyPress(Sender: TObject; var Key: Char);
@@ -131,6 +200,12 @@ procedure TFormCadastroFuncionarios.EdtEmailKeyPress(Sender: TObject; var Key: C
 begin
   if Key = #13 then
     Perform(CM_Dialogkey, VK_TAB, 0)
+end;
+
+procedure TFormCadastroFuncionarios.EdtInformacaoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key in [vk_return, vk_down] then
+    ActPesquisar.Execute;
 end;
 
 procedure TFormCadastroFuncionarios.EdtNomeKeyPress(Sender: TObject; var Key: Char);
@@ -156,11 +231,35 @@ begin
   DSFuncionarios.DataSet := DMAplicacao.FDQFuncionarios;
 
   DMAplicacao.BuscarDadosFuncionarios;
+
+  FFuncoes := TFuncoes.Create;
+end;
+
+procedure TFormCadastroFuncionarios.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FFuncoes);
+end;
+
+procedure TFormCadastroFuncionarios.HabilitarBotoes;
+begin
+  BtnNovo.Enabled := DSFuncionarios.State = dsBrowse;
+  BtnSalvar.Enabled := DSFuncionarios.State in [dsEdit, dsinsert];
+  BtnCancelar.Enabled := DSFuncionarios.State in [dsEdit, dsinsert];;
+  BtnExcluir.Enabled := DSFuncionarios.State = dsBrowse;
+end;
+
+procedure TFormCadastroFuncionarios.VerificarInsercaoSequencial;
+begin
+  if ChkInsercaoSequencial.Checked then
+  begin
+    DSFuncionarios.DataSet.Insert;
+    EdtCPF.SetFocus;
+  end;
 end;
 
 procedure TFormCadastroFuncionarios.ValidarCampos;
 begin
-  if not ValidouCPF then
+  if not FFuncoes.ValidouCPF(EdtCPF.Text) then
   begin
     ShowMessage('CPF inválido.');
     EdtCPF.SetFocus;
@@ -193,62 +292,6 @@ begin
     ShowMessage('Deve ser indicado o tamanho do calçado.');
     EdtTamCalcado.SetFocus;
     abort;
-  end;
-end;
-
-Function TFormCadastroFuncionarios.ValidouCPF;
-var
-  LCPF: String;
-  dig10, dig11: ShortString;
-  s, i, r, peso: integer;
-begin
-  LCPF := EdtCPF.Text;
-  LCPF := StringReplace(LCPF, '.', '', [rfReplaceAll]);
-  LCPF := StringReplace(LCPF, '-', '', [rfReplaceAll]);
-
-  if (length(LCPF) <> 11) then
-  begin
-    result := false;
-    abort;
-  end;
-
-  try
-    { *-- Cálculo do 1o. Digito Verificador --* }
-    s := 0;
-    peso := 10;
-    for i := 1 to 9 do
-    begin
-      // StrToInt converte o i-ésimo caractere do CPF em um número
-      s := s + (StrToInt(LCPF[i]) * peso);
-      peso := peso - 1;
-    end;
-    r := 11 - (s mod 11);
-    if ((r = 10) or (r = 11)) then
-      dig10 := '0'
-    else
-      Str(r: 1, dig10);
-
-    { *-- Cálculo do 2o. Digito Verificador --* }
-    s := 0;
-    peso := 11;
-    for i := 1 to 10 do
-    begin
-      s := s + (StrToInt(LCPF[i]) * peso);
-      peso := peso - 1;
-    end;
-    r := 11 - (s mod 11);
-    if ((r = 10) or (r = 11)) then
-      dig11 := '0'
-    else
-      Str(r: 1, dig11);
-
-    { Verifica se os digitos calculados conferem com os digitos informados. }
-    if ((string(dig10) = LCPF[10]) and (string(dig11) = LCPF[11])) then
-      result := true
-    else
-      result := false;
-  except
-    result := false;
   end;
 end;
 

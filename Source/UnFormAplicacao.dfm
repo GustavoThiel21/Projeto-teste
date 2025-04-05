@@ -17,16 +17,11 @@
     Left = 16
     Top = 24
     object Cadastrofuncionrio1: TMenuItem
-      Caption = 'Funcion'#225'rios'
-      object MiCadastrar: TMenuItem
-        Action = ActCadastrar
-      end
-      object MiConsultar: TMenuItem
-        Action = ActConsultar
-      end
+      Action = ActCadastrar
+      Caption = '&Funcion'#225'rios'
     end
     object Conexao: TMenuItem
-      Caption = 'Conex'#227'o'
+      Caption = 'Conex'#227'o BD'
       object MiAtribuirBanco: TMenuItem
         Action = ActAtribuirBanco
       end
@@ -41,7 +36,6 @@
     end
     object ActConsultar: TAction
       Caption = '&Consultar'
-      OnExecute = ActConsultarExecute
     end
     object ActAtribuirBanco: TAction
       Caption = 'Atribuir banco'
