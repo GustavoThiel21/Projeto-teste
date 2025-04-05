@@ -1,0 +1,1 @@
+Necessário copiar o arquivo "fbclient.dll" para o diretório onde se encontra o executável, exemplo: C:\Projeto Dass\Projeto-teste\Win32\Debug
