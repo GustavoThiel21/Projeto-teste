@@ -11,7 +11,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
   Font.Name = 'Segoe UI'
   Font.Style = []
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 15
   object PGGeral: TPageControl
     Left = 0
@@ -37,12 +36,13 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
         TitleFont.Height = -12
         TitleFont.Name = 'Segoe UI'
         TitleFont.Style = []
+        OnDblClick = DBGFuncionariosDblClick
         Columns = <
           item
             Expanded = False
             FieldName = 'NOME'
             Title.Caption = 'Nome do funcion'#225'rio'
-            Width = 152
+            Width = 132
             Visible = True
           end
           item
@@ -123,7 +123,7 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
           ItemIndex = 1
           TabOrder = 0
           Text = 'Nome do funcion'#225'rio'
-          OnKeyPress = CBFiltrosKeyPress
+          OnKeyDown = CBFiltrosKeyDown
           Items.Strings = (
             'CPF'
             'Nome do funcion'#225'rio'
@@ -141,12 +141,20 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
           OnKeyDown = EdtInformacaoKeyDown
         end
         object BtnPesquisar: TButton
-          Left = 574
+          Left = 477
           Top = 19
           Width = 75
           Height = 25
           Action = ActPesquisar
           TabOrder = 2
+        end
+        object BtnLimpar: TButton
+          Left = 558
+          Top = 19
+          Width = 91
+          Height = 25
+          Action = ActLimpar
+          TabOrder = 3
         end
       end
     end
@@ -160,8 +168,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
         Height = 358
         Align = alClient
         TabOrder = 0
-        ExplicitLeft = 3
-        ExplicitHeight = 373
         DesignSize = (
           667
           358)
@@ -239,7 +245,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
           DataSource = DSFuncionarios
           TabOrder = 1
           OnKeyPress = EdtNomeKeyPress
-          ExplicitWidth = 446
         end
         object EdtEmail: TDBEdit
           Left = 157
@@ -251,7 +256,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
           DataSource = DSFuncionarios
           TabOrder = 2
           OnKeyPress = EdtEmailKeyPress
-          ExplicitWidth = 446
         end
         object EdtTamCalcado: TDBEdit
           Left = 157
@@ -292,7 +296,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
           DataSource = DSFuncionarios
           TabOrder = 5
           OnKeyDown = EdtObservacaoKeyDown
-          ExplicitWidth = 446
         end
         object PnlNavegacao: TPanel
           Left = 1
@@ -677,7 +680,6 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
     Height = 388
     Align = alRight
     TabOrder = 1
-    ExplicitLeft = 677
     object BtnNovo: TSpeedButton
       Left = 6
       Top = 9
@@ -774,6 +776,10 @@ object FormCadastroFuncionarios: TFormCadastroFuncionarios
     object ActPesquisar: TAction
       Caption = '&Pesquisar'
       OnExecute = ActPesquisarExecute
+    end
+    object ActLimpar: TAction
+      Caption = '&Limpar filtros'
+      OnExecute = ActLimparExecute
     end
   end
   object DSFuncionarios: TDataSource

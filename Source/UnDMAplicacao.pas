@@ -6,7 +6,7 @@ Uses
   System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param, FireDAC.Stan.Error,
   FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf, FireDAC.Stan.Async, FireDAC.DApt, FireDAC.UI.Intf,
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.FB, FireDAC.Phys.FBDef, FireDAC.VCLUI.Wait, Data.DB,
-  FireDAC.Comp.Client, FireDAC.Comp.DataSet, Vcl.Dialogs;
+  FireDAC.Comp.Client, FireDAC.Comp.DataSet, Vcl.Dialogs, UnAplicacaoFuncoes;
 
 Type
   TDMAplicacao = class(TDataModule)
@@ -19,17 +19,18 @@ Type
     FDQFuncionariosTAMCALCADO: TIntegerField;
     FDQFuncionariosOBSERVACAO: TStringField;
     FDQFuncionariosIDFUNCIONARIO: TLargeintField;
-    Procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure FDQFuncionariosNewRecord(DataSet: TDataSet);
     procedure FDQFuncionariosCPFGetText(Sender: TField; var Text: string; DisplayText: Boolean);
     procedure FDQFuncionariosCPFSetText(Sender: TField; const Text: string);
+    procedure DataModuleCreate(Sender: TObject);
   Private
     { Private declarations }
     Function BuscarCaminhoBD: String;
     Function BuscarProximoIDFuncionario: Int64;
   Public
     { Public declarations }
+    FFuncoes: TFuncoes;
     Function ExisteTabela: Boolean;
     Procedure ConectarBD;
     Procedure CriarBD;
@@ -52,12 +53,14 @@ procedure TDMAplicacao.AlterarCaminhoBD(ACaminho: String);
 Var
   LIni: TIniFile;
 begin
+  if not FileExists(ExtractFileDir(Application.ExeName) + '\PrjTeste.ini') then
+    FFuncoes.CriarArquivoINI(ACaminho);
+
   LIni := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
   try
     LIni.WriteString('DadosBD', 'CaminhoBD', ACaminho);
   finally
     LIni.Free;
-    ConectarBD;
   end;
 end;
 
@@ -66,6 +69,10 @@ Var
   LIni: TIniFile;
 begin
   Result := Emptystr;
+
+  if not FileExists(ExtractFileDir(Application.ExeName) + '\PrjTeste.ini') then
+    FFuncoes.CriarArquivoINI;
+
   LIni := TIniFile.Create(ChangeFileExt(Application.ExeName, '.ini'));
   try
     Result := LIni.ReadString('DadosBD', 'CaminhoBD', Emptystr);
@@ -78,6 +85,12 @@ procedure TDMAplicacao.BuscarDadosFuncionarios(ACondicao: string);
 Var
   LSql: String;
 begin
+  if not FDConexao.Connected then
+    ConectarBD;
+
+  if not FDConexao.Connected then
+    exit;
+
   LSql := 'SELECT * FROM FUNCIONARIOS ';
 
   if ACondicao <> Emptystr then
@@ -89,7 +102,7 @@ begin
     sql.Clear;
     sql.Add(LSql);
     open;
-  end;
+  end
 end;
 
 function TDMAplicacao.BuscarProximoIDFuncionario: Int64;
@@ -102,7 +115,7 @@ begin
     begin
       Connection := FDConexao;
       sql.Clear;
-      sql.Add('SELECT GEN_ID(GN_FUNCIONARIOS,1) AS ID FROM RDB$RELATIONS');
+      sql.Add('SELECT FIRST 1 GEN_ID(GN_FUNCIONARIOS,1) AS ID FROM RDB$RELATIONS');
       open;
       Result := FieldByName('ID').AsLargeInt;
     end;
@@ -113,16 +126,24 @@ end;
 
 procedure TDMAplicacao.ConectarBD;
 begin
-  with FDConexao do
-  begin
-    with Params do
+  try
+    with FDConexao do
     begin
-      Add('DriverID=FB');
-      Add('Server=localhost');
-      Add('DataBase=' + BuscarCaminhoBD);
-      Add('User_Name=sysdba');
-      Add('Password=masterkey');
+      if Connected then
+        close;
+      with Params do
+      begin
+        Clear;
+        Add('DriverID=FB');
+        Add('Server=localhost');
+        Add('DataBase=' + BuscarCaminhoBD);
+        Add('User_Name=sysdba');
+        Add('Password=masterkey');
+      end;
+      open;
     end;
+  except
+    ShowMessage('Erro ao conectar no banco de dados. Verifique se o mesmo existe.')
   end;
 
   FDQFuncionarios.Connection := FDConexao;
@@ -131,11 +152,13 @@ end;
 procedure TDMAplicacao.CriarBD;
 Var
   LDiretorio: String;
+  LCriar: Boolean;
 begin
   LDiretorio := ExtractFileDir(Application.ExeName) + '\DBTESTE.FDB';;
 
   try
-    FDConexao.Params.Values['CreateDatabase'] := BoolToStr(not FileExists(Trim(LDiretorio)), True);
+    LCriar := not FileExists(Trim(LDiretorio));
+    FDConexao.Params.Values['CreateDatabase'] := BoolToStr(LCriar, True);
     FDConexao.Params.Values['Database'] := Trim(LDiretorio);
     FDConexao.Params.Values['DriverID'] := 'FB';
     FDConexao.Params.Values['User_Name'] := 'SYSDBA';
@@ -144,7 +167,8 @@ begin
     FDConexao.Params.Values['Dialect'] := '3';
     FDConexao.Commit;
 
-    AlterarCaminhoBD(LDiretorio);
+    if LCriar then
+      AlterarCaminhoBD(LDiretorio);
 
     if not ExisteTabela then
     begin
@@ -185,11 +209,7 @@ end;
 
 procedure TDMAplicacao.DataModuleCreate(Sender: TObject);
 begin
-  try
-    ConectarBD;
-  except
-    ShowMessage('Ocorreu um erro ao conectar no banco de dados. Acione o suporte');
-  end;
+  FFuncoes := TFuncoes.Create;
 end;
 
 procedure TDMAplicacao.DataModuleDestroy(Sender: TObject);
@@ -197,6 +217,7 @@ begin
   FreeAndNil(FDQFuncionarios);
   FDConexao.close;
   FreeAndNil(FDConexao);
+  FreeAndNil(FFuncoes);
 end;
 
 function TDMAplicacao.ExisteTabela: Boolean;

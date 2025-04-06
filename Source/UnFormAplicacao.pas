@@ -49,7 +49,10 @@ implementation
 procedure TFormAplicação.ActAtribuirBancoExecute(Sender: TObject);
 begin
   if ODCaminhoBD.Execute then
+  begin
     DMAplicacao.AlterarCaminhoBD(ODCaminhoBD.FileName);
+    DMAplicacao.ConectarBD;
+  end;
 end;
 
 procedure TFormAplicação.ActCadastrarExecute(Sender: TObject);

@@ -60,6 +60,8 @@ type
     BtnPesquisar: TButton;
     Label2: TLabel;
     ActPesquisar: TAction;
+    BtnLimpar: TButton;
+    ActLimpar: TAction;
     procedure ActNovoExecute(Sender: TObject);
     procedure ActSalvarExecute(Sender: TObject);
     procedure ActCancelarExecute(Sender: TObject);
@@ -71,17 +73,17 @@ type
     procedure EdtNomeKeyPress(Sender: TObject; var Key: Char);
     procedure EdtEmailKeyPress(Sender: TObject; var Key: Char);
     procedure EdtTamCalcadoKeyPress(Sender: TObject; var Key: Char);
-    procedure FormDestroy(Sender: TObject);
     procedure ActUltimoExecute(Sender: TObject);
     procedure ActProximoExecute(Sender: TObject);
     procedure ActAnteriorExecute(Sender: TObject);
     procedure ActPrimeiroExecute(Sender: TObject);
     procedure ActPesquisarExecute(Sender: TObject);
     procedure EdtInformacaoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure CBFiltrosKeyPress(Sender: TObject; var Key: Char);
     procedure CbTamCamisetaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure DBGFuncionariosDblClick(Sender: TObject);
+    procedure ActLimparExecute(Sender: TObject);
+    procedure CBFiltrosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    FFuncoes: TFuncoes;
     { Private declarations }
     Procedure AlterarStatusVisual;
     Procedure HabilitarBotoes;
@@ -112,6 +114,12 @@ begin
   end;
 end;
 
+procedure TFormCadastroFuncionarios.ActLimparExecute(Sender: TObject);
+begin
+  EdtInformacao.Clear;
+  DMAplicacao.BuscarDadosFuncionarios;
+end;
+
 procedure TFormCadastroFuncionarios.ActNovoExecute(Sender: TObject);
 begin
   if DSFuncionarios.DataSet.State = dsBrowse then
@@ -126,7 +134,8 @@ end;
 
 procedure TFormCadastroFuncionarios.ActPesquisarExecute(Sender: TObject);
 begin
-  DMAplicacao.BuscarDadosFuncionarios(FFuncoes.MontarCondicaoFiltro(CBFiltros.Text, Trim(EdtInformacao.Text)));
+  DMAplicacao.BuscarDadosFuncionarios(DMAplicacao.FFuncoes.MontarCondicaoFiltro(CBFiltros.Text,
+    Trim(EdtInformacao.Text)));
 end;
 
 procedure TFormCadastroFuncionarios.ActPrimeiroExecute(Sender: TObject);
@@ -172,16 +181,21 @@ begin
     LblStatus.Caption := 'Status: Navegando';
 end;
 
-procedure TFormCadastroFuncionarios.CBFiltrosKeyPress(Sender: TObject; var Key: Char);
+procedure TFormCadastroFuncionarios.CBFiltrosKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if Key = #13 then
-    Perform(CM_Dialogkey, VK_TAB, 0);
+  if Key = vk_return then
+    Perform(CM_Dialogkey, VK_TAB, 0)
 end;
 
 procedure TFormCadastroFuncionarios.CbTamCamisetaKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   if Key = vk_return then
     Perform(CM_Dialogkey, VK_TAB, 0)
+end;
+
+procedure TFormCadastroFuncionarios.DBGFuncionariosDblClick(Sender: TObject);
+begin
+  PGGeral.ActivePage := TSCadastro;
 end;
 
 procedure TFormCadastroFuncionarios.DSFuncionariosStateChange(Sender: TObject);
@@ -231,13 +245,6 @@ begin
   DSFuncionarios.DataSet := DMAplicacao.FDQFuncionarios;
 
   DMAplicacao.BuscarDadosFuncionarios;
-
-  FFuncoes := TFuncoes.Create;
-end;
-
-procedure TFormCadastroFuncionarios.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(FFuncoes);
 end;
 
 procedure TFormCadastroFuncionarios.HabilitarBotoes;
@@ -259,7 +266,7 @@ end;
 
 procedure TFormCadastroFuncionarios.ValidarCampos;
 begin
-  if not FFuncoes.ValidouCPF(EdtCPF.Text) then
+  if not DMAplicacao.FFuncoes.ValidouCPF(EdtCPF.Text) then
   begin
     ShowMessage('CPF inválido.');
     EdtCPF.SetFocus;

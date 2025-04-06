@@ -7,13 +7,29 @@ type
   public
     Function ValidouCPF(ACPF: string): Boolean;
     Function MontarCondicaoFiltro(ACampo, AInformacao: string): String;
+    procedure CriarArquivoINI(ACaminho: String = '');
   end;
 
 implementation
 
 { TFuncoes }
 
-Uses System.SysUtils;
+Uses System.SysUtils, IniFiles, vcl.Forms;
+
+procedure TFuncoes.CriarArquivoINI(ACaminho: String);
+var
+  LArquivoINI: TIniFile;
+  LCaminho: string;
+begin
+  if ACaminho <> EmptyStr then
+    LCaminho := ACaminho
+  else
+    LCaminho := ExtractFileDir(Application.ExeName) + '\DBTESTE.FDB';
+
+  LArquivoINI := TIniFile.Create(ExtractFileDir(Application.ExeName) + '\PrjTeste.ini');
+  LArquivoINI.WriteString('DadosBD', 'CaminhoBD', LCaminho);
+  LArquivoINI.Free;
+end;
 
 function TFuncoes.MontarCondicaoFiltro(ACampo, AInformacao: string): String;
 Const
